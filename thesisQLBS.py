@@ -14,13 +14,39 @@ import matplotlib.pyplot as plt
 import bspline
 import bspline.splinelab as splinelab
 from pathlib import Path
-# Import main helper function
-from QLBSHelper import QLBS_EPUT
 
 ###############################################################################
 ###############################################################################
+# CONTROL ENVIRONMENT
+
+
+
+
+# The Black-Scholes prices
+def bs_put(S0,sigma,r,T,t,K):
+    d1 = (np.log(S0/K) + (r + 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
+    d2 = (np.log(S0/K) + (r - 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
+    price = K * np.exp(-r * (T-t)) * norm.cdf(-d2) - S0 * norm.cdf(-d1)
+    return price
+
+def bs_call(S0,mu,sigma,r,T,t,K):
+    d1 = (np.log(S0/K) + (r + 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
+    d2 = (np.log(S0/K) + (r - 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
+    price = S0 * norm.cdf(d1) - K * np.exp(-r * (T-t)) * norm.cdf(d2)
+    return price
+    
+
+
+
+
+###############################################################################
+###############################################################################
+# TESTING ENVIRONEMENT
+    
 
 init = [100,0.05,0.15,0.03,1,10,0.001,10000,100, 42]
+# Import main helper function
+from QLBSHelper import QLBS_EPUT
 
 def testingPhase1(initParams):
    S0 = initParams[0]    # initial stock price
@@ -34,14 +60,21 @@ def testingPhase1(initParams):
    K = initParams[8] # Strike price
    delta_t = M / T                # time interval
    gamma = np.exp(- r * delta_t)  # discount factor
+   
+   
    rand_seed = initParams[9]
+   
+   
    q_price = QLBS_EPUT(S0,mu,sigma,r,M,T,risk_lambda,N_MC,delta_t,gamma,K, rand_seed)
-   QLBS_price = -np.mean(q_price[0])
-   EBS_put_price = q_price[1]
+   QLBS_price = -np.mean(q_price[0]) #average over all simulations
+   
+   EBS_put_price = bs_put(S0,sigma,r,M,0,K)
+   compTime = q_price[1]
    
    print('---------------------------------')
    print('       QLBS RL Option Pricing       ')
    print('---------------------------------\n')
+   print('Type:' + 'European put')
    print('%-25s' % ('Initial Stock Price:'), S0)
    print('%-25s' % ('Drift of Stock:'), mu)
    print('%-25s' % ('Volatility of Stock:'), sigma)
@@ -49,9 +82,10 @@ def testingPhase1(initParams):
    print('%-25s' % ('Risk aversion parameter :'), risk_lambda)
    print('%-25s' % ('Strike:'), K)
    print('%-25s' % ('Maturity:'), M)
-   print('%-26s %.4f' % ('\nThe QLBS Put Price 1 :', QLBS_price))
-   print('%-26s %.4f' % ('\nBlack-Scholes Put Price:', EBS_put_price))
+   print('%-26s %.4f' % ('\nThe QLBS Price:', QLBS_price))
+   print('%-26s %.4f' % ('\nBlack-Scholes Price:', EBS_put_price))
    print('%-25s' % ('Random Seed:'), rand_seed)
+   print('Computational time for Q-Learning:', compTime, 'seconds')
    print('\n')
    
    ###############################################################################
@@ -60,28 +94,10 @@ def testingPhase1(initParams):
 
  
    
-   return([QLBS_price,EBS_put_price])
+   return(QLBS_price)
  
 
 test = testingPhase1(init)
-
-
-
-
-
-# Compare the optimal action $a_t^\star\left(X_t\right)$ and optimal Q-function with optimal action $Q_t^\star\left(X_t,a_t^\star\right)$ given by Dynamic Programming and Reinforcement Learning.
-# 
-# Plots of 1- path comparisons are given below.
-
-# plot one path
-plt.plot(C_QLBS.T.iloc[:,[200]])
-plt.xlabel('Time Steps')
-plt.title('QLBS RL Option Price')
-plt.show()
-
-# plot a and a_star
-
-
 
 
 

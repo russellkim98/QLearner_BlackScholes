@@ -307,6 +307,7 @@ def QLBS_EPUT(S0,mu,sigma,r,M,T,risk_lambda,N_MC,delta_t,gamma,K,rand_seed):
     # variable $X_t$, hedge position $a_t$, instantaneous reward $R_t$ and the 
     # next-time value $X_{t+1}$.
     
+    starttime = time.time()
     
     eta = 0.5 #  0.5 # 0.25 # 0.05 # 0.5 # 0.1 # 0.25 # 0.15
     reg_param = 1e-3
@@ -465,7 +466,7 @@ def QLBS_EPUT(S0,mu,sigma,r,M,T,risk_lambda,N_MC,delta_t,gamma,K,rand_seed):
     # ## Fitted Q Iteration (FQI)
     
     
-    starttime = time.time()
+    
     # implied Q-function by input data (using the first form in Eq.(68))
     Q_RL = pd.DataFrame([], index=range(1, N_MC+1), columns=range(T+1))
     Q_RL.iloc[:,-1] = - Pi.iloc[:,-1] - risk_lambda * np.var(Pi.iloc[:,-1])
@@ -550,22 +551,6 @@ def QLBS_EPUT(S0,mu,sigma,r,M,T,risk_lambda,N_MC,delta_t,gamma,K,rand_seed):
         Q_RL.loc[flag_upper,t] = up_perc_Q_RL
       
     endtime = time.time()
-
-    ###############################################################################
-    ###############################################################################
-
-    # The Black-Scholes prices
-    def bs_put(t, S0=S0, K=K, r=r, sigma=sigma, T=M):
-        d1 = (np.log(S0/K) + (r + 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-        d2 = (np.log(S0/K) + (r - 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-        price = K * np.exp(-r * (T-t)) * norm.cdf(-d2) - S0 * norm.cdf(-d1)
-        return price
-    
-    def bs_call(t, S0=S0, K=K, r=r, sigma=sigma, T=M):
-        d1 = (np.log(S0/K) + (r + 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-        d2 = (np.log(S0/K) + (r - 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-        price = S0 * norm.cdf(d1) - K * np.exp(-r * (T-t)) * norm.cdf(d2)
-        return price
     
     ###############################################################################
     ###############################################################################
@@ -605,8 +590,9 @@ def QLBS_EPUT(S0,mu,sigma,r,M,T,risk_lambda,N_MC,delta_t,gamma,K,rand_seed):
     plt.title('Optimal Action Comparison Between DP and RL for a sample path')
     plt.show()
     
-
-    return([Q_star.iloc[:,0],bs_put(0)])
+    compTime = endtime-starttime
+    
+    return([Q_star.iloc[:,0],compTime])
 
 
 
