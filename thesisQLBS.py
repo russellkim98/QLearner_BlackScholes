@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 from scipy.stats import norm
@@ -6,6 +5,7 @@ import random
 import copy
 import sys
 import os
+
 os.chdir("/Users/therealrussellkim/QLearner_BlackScholes")
 
 
@@ -20,91 +20,81 @@ from pathlib import Path
 # CONTROL ENVIRONMENT
 
 
-
-
 # The Black-Scholes prices
-def bs_put(S0,sigma,r,T,t,K):
-    d1 = (np.log(S0/K) + (r + 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-    d2 = (np.log(S0/K) + (r - 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-    price = K * np.exp(-r * (T-t)) * norm.cdf(-d2) - S0 * norm.cdf(-d1)
+def bs_put(S0, sigma, r, T, t, K):
+    d1 = (np.log(S0 / K) + (r + 1 / 2 * sigma ** 2) * (T - t)) / sigma / np.sqrt(T - t)
+    d2 = (np.log(S0 / K) + (r - 1 / 2 * sigma ** 2) * (T - t)) / sigma / np.sqrt(T - t)
+    price = K * np.exp(-r * (T - t)) * norm.cdf(-d2) - S0 * norm.cdf(-d1)
     return price
 
-def bs_call(S0,mu,sigma,r,T,t,K):
-    d1 = (np.log(S0/K) + (r + 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-    d2 = (np.log(S0/K) + (r - 1/2 * sigma**2) * (T-t)) / sigma / np.sqrt(T-t)
-    price = S0 * norm.cdf(d1) - K * np.exp(-r * (T-t)) * norm.cdf(d2)
+
+def bs_call(S0, mu, sigma, r, T, t, K):
+    d1 = (np.log(S0 / K) + (r + 1 / 2 * sigma ** 2) * (T - t)) / sigma / np.sqrt(T - t)
+    d2 = (np.log(S0 / K) + (r - 1 / 2 * sigma ** 2) * (T - t)) / sigma / np.sqrt(T - t)
+    price = S0 * norm.cdf(d1) - K * np.exp(-r * (T - t)) * norm.cdf(d2)
     return price
-    
-
-
 
 
 ###############################################################################
 ###############################################################################
 # TESTING ENVIRONEMENT
-    
 
-init = [100,0.05,0.15,0.03,1,10,0.001,10000,100, 42]
+
+init = [100, 0.05, 0.15, 0.03, 1, 10, 0.001, 10000, 100, 42]
 # Import main helper function
 from QLBSHelper import QLBS_EPUT
 
-def testingPhase1(initParams):
-   S0 = initParams[0]    # initial stock price
-   mu = initParams[1]    # drift
-   sigma = initParams[2] # volatility
-   r = initParams[3]     # risk-free rate
-   M = initParams[4]     # maturity
-   T = initParams[5]     # number of time steps
-   risk_lambda = initParams[6]   # risk aversion
-   N_MC = initParams[7] # number of paths
-   K = initParams[8] # Strike price
-   delta_t = M / T                # time interval
-   gamma = np.exp(- r * delta_t)  # discount factor
-   
-   
-   rand_seed = initParams[9]
-   
-   
-   q_price = QLBS_EPUT(S0,mu,sigma,r,M,T,risk_lambda,N_MC,delta_t,gamma,K, rand_seed)
-   QLBS_price = -np.mean(q_price[0]) #average over all simulations
-   
-   EBS_put_price = bs_put(S0,sigma,r,M,0,K)
-   compTime = q_price[1]
-   
-   print('---------------------------------')
-   print('       QLBS RL Option Pricing       ')
-   print('---------------------------------\n')
-   print('Type:' + 'European put')
-   print('%-25s' % ('Initial Stock Price:'), S0)
-   print('%-25s' % ('Drift of Stock:'), mu)
-   print('%-25s' % ('Volatility of Stock:'), sigma)
-   print('%-25s' % ('Risk-free Rate:'), r)
-   print('%-25s' % ('Risk aversion parameter :'), risk_lambda)
-   print('%-25s' % ('Strike:'), K)
-   print('%-25s' % ('Maturity:'), M)
-   print('%-26s %.4f' % ('\nThe QLBS Price:', QLBS_price))
-   print('%-26s %.4f' % ('\nBlack-Scholes Price:', EBS_put_price))
-   print('%-25s' % ('Random Seed:'), rand_seed)
-   print('Computational time for Q-Learning:', compTime, 'seconds')
-   print('\n')
-   
-   ###############################################################################
-   ###############################################################################
-   
 
- 
-   
-   return(QLBS_price)
- 
+def testingPhase1(initParams):
+    S0 = initParams[0]  # initial stock price
+    mu = initParams[1]  # drift
+    sigma = initParams[2]  # volatility
+    r = initParams[3]  # risk-free rate
+    M = initParams[4]  # maturity
+    T = initParams[5]  # number of time steps
+    risk_lambda = initParams[6]  # risk aversion
+    N_MC = initParams[7]  # number of paths
+    K = initParams[8]  # Strike price
+    delta_t = M / T  # time interval
+    gamma = np.exp(-r * delta_t)  # discount factor
+
+    rand_seed = initParams[9]
+
+    q_price = QLBS_EPUT(
+        S0, mu, sigma, r, M, T, risk_lambda, N_MC, delta_t, gamma, K, rand_seed
+    )
+    QLBS_price = -np.mean(q_price[0])  # average over all simulations
+
+    EBS_put_price = bs_put(S0, sigma, r, M, 0, K)
+    compTime = q_price[1]
+
+    print("---------------------------------")
+    print("       QLBS RL Option Pricing       ")
+    print("---------------------------------\n")
+    print("Type:" + "European put")
+    print("%-25s" % ("Initial Stock Price:"), S0)
+    print("%-25s" % ("Drift of Stock:"), mu)
+    print("%-25s" % ("Volatility of Stock:"), sigma)
+    print("%-25s" % ("Risk-free Rate:"), r)
+    print("%-25s" % ("Risk aversion parameter :"), risk_lambda)
+    print("%-25s" % ("Strike:"), K)
+    print("%-25s" % ("Maturity:"), M)
+    print("%-26s %.4f" % ("\nThe QLBS Price:", QLBS_price))
+    print("%-26s %.4f" % ("\nBlack-Scholes Price:", EBS_put_price))
+    print("%-25s" % ("Random Seed:"), rand_seed)
+    print("Computational time for Q-Learning:", compTime, "seconds")
+    print("\n")
+
+    ###############################################################################
+    ###############################################################################
+
+    return QLBS_price
+
 
 test = testingPhase1(init)
 
 
-
-
-
-
-'''
+"""
 
 # add here calculation of different MC runs (6 repetitions of action randomization)
 
@@ -196,7 +186,4 @@ plt.savefig('Option_price_vs_noise_level.png', dpi=600)
 plt.show()
 
 #[]:
-'''
-
-
-
+"""
